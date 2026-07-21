@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #FDFBF7;
+  --card-bg: #FFFFFF;
+  --card-border: #E8E2DB;
+  --heading: #6B4E51;
+  --heading-light: #987070;
+  --accent: #C27D7D;
+  --accent-dark: #A85F5F;
+  --accent-light: #E8B4B4;
+  --text-primary: #3D2C2C;
+  --text-secondary: #7A6A6A;
+  --text-muted: #A89898;
+  --input-bg: #FDFBF7;
+  --input-border: #D9CFC8;
+  --input-focus: #C27D7D;
+  --error: #C27D7D;
+  --success: #7D9E8C;
+  --shadow-sm: 0 1px 3px rgba(107, 78, 81, 0.08), 0 1px 2px rgba(107, 78, 81, 0.04);
+  --shadow-md: 0 4px 20px rgba(107, 78, 81, 0.10), 0 2px 8px rgba(107, 78, 81, 0.06);
+  --shadow-lg: 0 10px 40px rgba(107, 78, 81, 0.15), 0 4px 16px rgba(107, 78, 81, 0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(194, 125, 125, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(107, 78, 81, 0.05) 0%, transparent 60%);
+  min-height: 100vh;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
