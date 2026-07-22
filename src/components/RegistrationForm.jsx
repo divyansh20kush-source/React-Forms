@@ -6,20 +6,22 @@ import './RegistrationForm.css';
 
 // ── Zod Schema ──────────────────────────────────────────────
 const memberSchema = z.object({
-  name: z.string().min(1, 'Member name is required'),
+  fullName: z.string().min(1, 'Member full name is required'),
+  rollNumber: z.string().min(1, 'Member roll number is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Valid phone number required'),
 });
 
 const schema = z.object({
-  captainName: z.string().min(1, 'Captain name is required'),
-  rollNumber: z.string().min(1, 'Roll number is required'),
+  projectTopic: z.string().min(1, 'Project topic is required'),
+  captainName: z.string().min(1, 'Captain full name is required'),
+  captainRoll: z.string().min(1, 'Captain roll number is required'),
+  captainEmail: z.string().email('Invalid email address'),
+  captainPhone: z.string().min(10, 'Valid phone number required'),
   participationMode: z.enum(['Solo', 'Team'], {
     errorMap: () => ({ message: 'Please select a participation mode' }),
   }),
   teamMembers: z.array(memberSchema).optional(),
-  projectTopic: z.enum(
-    ['Industrial Automation', 'Transportation', 'Agriculture', 'Healthcare', 'Home Automation'],
-    { errorMap: () => ({ message: 'Please select a project topic' }) }
-  ),
 });
 
 // ── Icon Components ──────────────────────────────────────────
@@ -64,14 +66,6 @@ const IconSend = () => (
 
 const GOOGLE_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbwSnO7VCuJtuxsCgWbt-6mIu0F98xUrPIMBVt03j6fYhcVeqEAMDS19gIMkjwcM8vUZwg/exec';
-
-const TOPICS = [
-  'Industrial Automation',
-  'Transportation',
-  'Agriculture',
-  'Healthcare',
-  'Home Automation',
-];
 
 // ── Footer ───────────────────────────────────────────────────
 function FormFooter() {
@@ -127,11 +121,13 @@ export default function RegistrationForm() {
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
+      projectTopic: '',
       captainName: '',
-      rollNumber: '',
+      captainRoll: '',
+      captainEmail: '',
+      captainPhone: '',
       participationMode: '',
       teamMembers: [],
-      projectTopic: '',
     },
   });
 
@@ -147,23 +143,32 @@ export default function RegistrationForm() {
     setIsSubmitting(true);
     setSubmitError('');
 
-    const teamMembersStr =
-      data.participationMode === 'Team'
-        ? (data.teamMembers?.map((m) => m.name).filter(Boolean).join(', ') || 'N/A')
-        : 'N/A';
+    // Format Team Members vertically line-by-line for clean spreadsheet display
+    const teamMembersFormatted =
+      data.participationMode === 'Team' && data.teamMembers?.length > 0
+        ? data.teamMembers
+            .map(
+              (m, i) =>
+                `Member ${i + 1}:\n` +
+                `Full Name: ${m.fullName}\n` +
+                `Roll Number: ${m.rollNumber}\n` +
+                `Email ID: ${m.email}\n` +
+                `Phone Number: ${m.phone}`
+            )
+            .join('\n\n')
+        : 'N/A (Solo Entry)';
 
     const payload = {
-      captainName:       data.captainName,
-      rollNumber:        data.rollNumber,
-      participationMode: data.participationMode,
-      teamMembers:       teamMembersStr,
       projectTopic:      data.projectTopic,
+      captainName:       data.captainName,
+      captainRoll:       data.captainRoll,
+      captainEmail:      data.captainEmail,
+      captainPhone:      data.captainPhone,
+      participationMode: data.participationMode,
+      teamMembers:       teamMembersFormatted,
       submittedAt:       new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
     };
 
-    // GAS does a 302 redirect on every request. POST bodies are dropped
-    // during that redirect (HTTP spec). GET params survive in the URL,
-    // so this is the only approach that reliably delivers data to GAS.
     const params = new URLSearchParams(payload);
     fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`, {
       method: 'GET',
@@ -197,46 +202,115 @@ export default function RegistrationForm() {
         {/* ── Form Body ── */}
         <form className="form-body" onSubmit={handleSubmit(onSubmit)} noValidate>
 
-          {/* Captain Name */}
+          {/* 1. Project Topic */}
           <div className="field-group">
-            <label className="field-label" htmlFor="captainName">
-              Captain Name <span className="required-dot">*</span>
+            <label className="field-label" htmlFor="projectTopic">
+              Project Topic <span className="required-dot">*</span>
             </label>
             <input
-              id="captainName"
-              className={`field-input${errors.captainName ? ' error' : ''}`}
+              id="projectTopic"
+              className={`field-input${errors.projectTopic ? ' error' : ''}`}
               type="text"
-              placeholder="Enter your full name"
-              autoComplete="name"
-              {...register('captainName')}
+              placeholder="e.g. Smart IoT Agriculture System"
+              {...register('projectTopic')}
             />
-            {errors.captainName && (
+            {errors.projectTopic && (
               <span className="field-error" role="alert">
                 <IconAlert />
-                {errors.captainName.message}
+                {errors.projectTopic.message}
               </span>
             )}
           </div>
 
-          {/* Roll Number */}
-          <div className="field-group">
-            <label className="field-label" htmlFor="rollNumber">
-              Roll Number <span className="required-dot">*</span>
-            </label>
-            <input
-              id="rollNumber"
-              className={`field-input${errors.rollNumber ? ' error' : ''}`}
-              type="text"
-              placeholder="e.g. 2023CSE001"
-              {...register('rollNumber')}
-            />
-            {errors.rollNumber && (
-              <span className="field-error" role="alert">
-                <IconAlert />
-                {errors.rollNumber.message}
-              </span>
-            )}
+          <div className="form-divider">Team Captain Details</div>
+
+          {/* 2. Team Captain Details */}
+          <div className="grid-2-col">
+            {/* Captain Full Name */}
+            <div className="field-group">
+              <label className="field-label" htmlFor="captainName">
+                Full Name <span className="required-dot">*</span>
+              </label>
+              <input
+                id="captainName"
+                className={`field-input${errors.captainName ? ' error' : ''}`}
+                type="text"
+                placeholder="Captain's full name"
+                autoComplete="name"
+                {...register('captainName')}
+              />
+              {errors.captainName && (
+                <span className="field-error" role="alert">
+                  <IconAlert />
+                  {errors.captainName.message}
+                </span>
+              )}
+            </div>
+
+            {/* Captain Roll Number */}
+            <div className="field-group">
+              <label className="field-label" htmlFor="captainRoll">
+                Roll Number <span className="required-dot">*</span>
+              </label>
+              <input
+                id="captainRoll"
+                className={`field-input${errors.captainRoll ? ' error' : ''}`}
+                type="text"
+                placeholder="e.g. 2023CSE001"
+                {...register('captainRoll')}
+              />
+              {errors.captainRoll && (
+                <span className="field-error" role="alert">
+                  <IconAlert />
+                  {errors.captainRoll.message}
+                </span>
+              )}
+            </div>
+
+            {/* Captain Email ID */}
+            <div className="field-group">
+              <label className="field-label" htmlFor="captainEmail">
+                Email ID <span className="required-dot">*</span>
+              </label>
+              <input
+                id="captainEmail"
+                className={`field-input${errors.captainEmail ? ' error' : ''}`}
+                type="email"
+                placeholder="captain@example.com"
+                autoComplete="email"
+                {...register('captainEmail')}
+              />
+              {errors.captainEmail && (
+                <span className="field-error" role="alert">
+                  <IconAlert />
+                  {errors.captainEmail.message}
+                </span>
+              )}
+            </div>
+
+            {/* Captain Phone Number */}
+            <div className="field-group">
+              <label className="field-label" htmlFor="captainPhone">
+                Phone Number <span className="required-dot">*</span>
+              </label>
+              <input
+                id="captainPhone"
+                className={`field-input${errors.captainPhone ? ' error' : ''}`}
+                type="tel"
+                placeholder="e.g. 9876543210"
+                autoComplete="tel"
+                {...register('captainPhone')}
+              />
+              {errors.captainPhone && (
+                <span className="field-error" role="alert">
+                  <IconAlert />
+                  {errors.captainPhone.message}
+                </span>
+              )}
+            </div>
           </div>
+
+          <div className="form-divider">Participation & Team Details</div>
 
           {/* Participation Mode */}
           <div className="field-group">
@@ -263,13 +337,13 @@ export default function RegistrationForm() {
             )}
           </div>
 
-          {/* Team Members (dynamic) */}
+          {/* 3. Team Members Details (Dynamic) */}
           {isTeam && (
             <div className="team-section" id="team-members-section">
               <div className="team-section-header">
                 <span className="team-section-title">
                   <IconUsers />
-                  Team Members
+                  Team Members Details
                 </span>
                 {fields.length > 0 && (
                   <span className="team-count-badge">{fields.length} member{fields.length !== 1 ? 's' : ''}</span>
@@ -278,44 +352,116 @@ export default function RegistrationForm() {
 
               {fields.length === 0 && (
                 <p className="team-empty-state">
-                  No members added yet — click below to add team members.
+                  No team members added yet. Click "Add Member" below to include team members.
                 </p>
               )}
 
               {fields.map((field, index) => (
-                <div className="team-member-row" key={field.id}>
-                  <span className="member-number">{index + 1}</span>
-                  <div className="member-input-group">
-                    <input
-                      id={`teamMember-${index}`}
-                      className={`field-input${errors.teamMembers?.[index]?.name ? ' error' : ''}`}
-                      type="text"
-                      placeholder={`Member ${index + 1} full name`}
-                      {...register(`teamMembers.${index}.name`)}
-                    />
-                    {errors.teamMembers?.[index]?.name && (
-                      <span className="field-error" role="alert">
-                        <IconAlert />
-                        {errors.teamMembers[index].name.message}
-                      </span>
-                    )}
+                <div className="team-member-card" key={field.id}>
+                  <div className="member-card-header">
+                    <span className="member-card-title">
+                      <span className="member-number">{index + 1}</span>
+                      Member {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-remove"
+                      onClick={() => remove(index)}
+                      aria-label={`Remove member ${index + 1}`}
+                      id={`remove-member-${index}`}
+                    >
+                      <IconX /> Remove
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-remove"
-                    onClick={() => remove(index)}
-                    aria-label={`Remove member ${index + 1}`}
-                    id={`remove-member-${index}`}
-                  >
-                    <IconX />
-                  </button>
+
+                  <div className="grid-2-col">
+                    {/* Full Name */}
+                    <div className="field-group">
+                      <label className="field-label" htmlFor={`teamMembers.${index}.fullName`}>
+                        Full Name <span className="required-dot">*</span>
+                      </label>
+                      <input
+                        id={`teamMembers.${index}.fullName`}
+                        className={`field-input${errors.teamMembers?.[index]?.fullName ? ' error' : ''}`}
+                        type="text"
+                        placeholder="Member full name"
+                        {...register(`teamMembers.${index}.fullName`)}
+                      />
+                      {errors.teamMembers?.[index]?.fullName && (
+                        <span className="field-error" role="alert">
+                          <IconAlert />
+                          {errors.teamMembers[index].fullName.message}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Roll Number */}
+                    <div className="field-group">
+                      <label className="field-label" htmlFor={`teamMembers.${index}.rollNumber`}>
+                        Roll Number <span className="required-dot">*</span>
+                      </label>
+                      <input
+                        id={`teamMembers.${index}.rollNumber`}
+                        className={`field-input${errors.teamMembers?.[index]?.rollNumber ? ' error' : ''}`}
+                        type="text"
+                        placeholder="e.g. 2023CSE002"
+                        {...register(`teamMembers.${index}.rollNumber`)}
+                      />
+                      {errors.teamMembers?.[index]?.rollNumber && (
+                        <span className="field-error" role="alert">
+                          <IconAlert />
+                          {errors.teamMembers[index].rollNumber.message}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Email ID */}
+                    <div className="field-group">
+                      <label className="field-label" htmlFor={`teamMembers.${index}.email`}>
+                        Email ID <span className="required-dot">*</span>
+                      </label>
+                      <input
+                        id={`teamMembers.${index}.email`}
+                        className={`field-input${errors.teamMembers?.[index]?.email ? ' error' : ''}`}
+                        type="email"
+                        placeholder="member@example.com"
+                        {...register(`teamMembers.${index}.email`)}
+                      />
+                      {errors.teamMembers?.[index]?.email && (
+                        <span className="field-error" role="alert">
+                          <IconAlert />
+                          {errors.teamMembers[index].email.message}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Phone Number */}
+                    <div className="field-group">
+                      <label className="field-label" htmlFor={`teamMembers.${index}.phone`}>
+                        Phone Number <span className="required-dot">*</span>
+                      </label>
+                      <input
+                        id={`teamMembers.${index}.phone`}
+                        className={`field-input${errors.teamMembers?.[index]?.phone ? ' error' : ''}`}
+                        type="tel"
+                        placeholder="e.g. 9876543210"
+                        {...register(`teamMembers.${index}.phone`)}
+                      />
+                      {errors.teamMembers?.[index]?.phone && (
+                        <span className="field-error" role="alert">
+                          <IconAlert />
+                          {errors.teamMembers[index].phone.message}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
 
               <button
                 type="button"
                 className="btn-add-member"
-                onClick={() => append({ name: '' })}
+                onClick={() => append({ fullName: '', rollNumber: '', email: '', phone: '' })}
                 id="add-member-btn"
               >
                 <IconPlus />
@@ -323,34 +469,6 @@ export default function RegistrationForm() {
               </button>
             </div>
           )}
-
-          <div className="form-divider">Project Details</div>
-
-          {/* Project Topic */}
-          <div className="field-group">
-            <label className="field-label" htmlFor="projectTopic">
-              Project Topic <span className="required-dot">*</span>
-            </label>
-            <div className="field-select-wrapper">
-              <select
-                id="projectTopic"
-                className={`field-select${errors.projectTopic ? ' error' : ''}`}
-                {...register('projectTopic')}
-              >
-                <option value="" disabled>Select a topic...</option>
-                {TOPICS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-              <span className="select-arrow"><IconChevron /></span>
-            </div>
-            {errors.projectTopic && (
-              <span className="field-error" role="alert">
-                <IconAlert />
-                {errors.projectTopic.message}
-              </span>
-            )}
-          </div>
 
           {/* Global submit error */}
           {submitError && (
@@ -360,25 +478,27 @@ export default function RegistrationForm() {
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="btn-submit"
-            disabled={isSubmitting}
-            id="submit-btn"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="spinner" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <IconSend />
-                Submit Registration
-              </>
-            )}
-          </button>
+          {/* Standard Sized Submit Button */}
+          <div className="submit-container">
+            <button
+              type="submit"
+              className="btn-submit"
+              disabled={isSubmitting}
+              id="submit-btn"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <IconSend />
+                  Submit Registration
+                </>
+              )}
+            </button>
+          </div>
         </form>
 
         <FormFooter />
