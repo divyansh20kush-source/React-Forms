@@ -447,27 +447,32 @@
 
 .btn-submit {
   width: auto;
-  min-width: 200px;
-  padding: 0.75rem 2rem;
+  min-width: 140px;
+  padding: 0.5rem 1.25rem;
   background: linear-gradient(135deg, #6B4E51 0%, #987070 50%, #C27D7D 100%);
   background-size: 200% 200%;
   border: none;
   border-radius: var(--radius-sm);
   color: #fff;
   font-family: 'Inter', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: var(--transition);
   outline: none;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(107, 78, 81, 0.25);
+  box-shadow: 0 2px 10px rgba(107, 78, 81, 0.2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.btn-submit svg {
+  width: 14px;
+  height: 14px;
 }
 
 .btn-submit::before {
@@ -484,13 +489,13 @@
 }
 
 .btn-submit:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(107, 78, 81, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(107, 78, 81, 0.3);
 }
 
 .btn-submit:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(107, 78, 81, 0.2);
+  box-shadow: 0 2px 8px rgba(107, 78, 81, 0.2);
 }
 
 .btn-submit:disabled {
@@ -504,8 +509,8 @@
 }
 
 .btn-submit .spinner {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border: 2px solid rgba(255,255,255,0.35);
   border-top-color: #fff;
   border-radius: 50%;
